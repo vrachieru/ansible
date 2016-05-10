@@ -1,0 +1,94 @@
+---
+
+- name: Add group
+  group:
+    name: '{{ activemq_user }}'
+  sudo: yes
+  sudo_user: root
+
+- name: Add user
+  user:
+    name: '{{ activemq_user }}'
+    group: '{{ activemq_user }}'
+    shell: /bin/sh
+    createhome: no
+    comment: 'ActiveMQ service user'
+  sudo: yes
+  sudo_user: root
+
+- name: Create install directory
+  file:
+    path: '{{ activemq_install_dir }}'
+    state: directory
+    owner: '{{ activemq_user }}'
+    group: '{{ activemq_user }}'
+    mode: 0775
+  sudo: yes
+  sudo_user: root
+
+- name: Symlink installed instance
+  file:
+    src: '{{ activemq_install_dir }}'
+    dest: '{{ activemq_symlink }}'
+    state: link
+  sudo: yes
+  sudo_user: root
+
+- name: Get tarball
+  get_url:
+    url: '{{ activemq_download_url }}'
+    dest: '{{ activemq_install_dir }}'
+  register: tarball
+  sudo: yes
+  sudo_user: root
+
+- name: Unarchive
+  unarchive:
+    src: '{{ activemq_install_dir }}/apache-activemq-{{ activemq_version }}-bin.tar.gz'
+    dest: '{{ activemq_install_dir }}/../'
+    copy: no
+    owner: '{{ activemq_user }}'
+    group: '{{ activemq_user }}'
+    creates: no
+  when: tarball|changed
+  sudo: yes
+  sudo_user: root
+
+- name: Set service user
+  lineinfile:
+    dest: '{{ activemq_install_dir }}/bin/activemq'
+    regexp: '^(.*)ACTIVEMQ_USER=""'
+    line: '  ACTIVEMQ_USER={{ activemq_user }}'
+  sudo: yes
+  sudo_user: root
+
+- name: Change owner on install directory
+  file:
+    path: '{{ activemq_install_dir }}'
+    state: directory
+    owner: '{{ activemq_user }}'
+    group: '{{ activemq_user }}'
+    recurse: yes
+  sudo: yes
+  sudo_user: root
+
+- name: Symlink init script
+  file:
+    src: '{{ activemq_symlink }}/bin/linux-x86-64/activemq'
+    dest: '/etc/init.d/activemq'
+    state: link
+  sudo: yes
+  sudo_user: root
+
+- name: Update rc.d defaults
+  shell: 'update-rc.d activemq defaults'
+  sudo: yes
+  sudo_user: root
+
+- name: Ensure service is running
+  service:
+    name: 'activemq'
+    enabled: 'yes'
+    state: 'started'
+  sudo: yes
+  sudo_user: root

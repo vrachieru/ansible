@@ -1,0 +1,7 @@
+---
+
+activemq_user: activemq
+activemq_version: 5.13.0
+activemq_download_url: 'http://apache.javapipe.com/activemq/{{ activemq_version }}/apache-activemq-{{ activemq_version }}-bin.tar.gz'
+activemq_install_dir: '/opt/apache-activemq-{{ activemq_version }}'
+activemq_symlink: '/opt/activemq'
