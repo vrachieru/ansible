@@ -1,0 +1,60 @@
+---
+
+- name: Create user groups
+  sudo: yes
+  sudo_user: root
+  group:
+    name:   '{{ item.name }}'
+    state:  '{{ item.state  | default("present") }}'
+    gid:    '{{ item.gid    | default(omit) }}'
+    system: '{{ item.system | default(omit) }}'
+  with_items: user_groups|list > 0
+  when: >
+    user_groups is defined and
+    item.name is defined
+
+- name: Create users
+  sudo: yes
+  sudo_user: root
+  user:
+    name: '{{ item.username }}'
+    groups: '{{ ",".join(item.groups) | default(omit) }}'
+    shell: '{{ item.shell | default(omit) }}'
+    password: '{{ item.password | default("{{ default_password }}") }}'
+    comment: '{{ item.username | default(omit) }}'
+    uid: '{{ item.uid | default(omit) }}'
+    createhome: 'yes'
+  with_items: users
+  when: >
+    users is defined and
+    item.name is defined
+
+- name: Add admin users to sudo group
+  sudo: yes
+  sudo_user: root
+  user:
+    name: '{{ item.username }}'
+    state: '{{ item.state | default("present") }}'
+    groups: 'sudo'
+    append: 'yes'
+  with_items: users
+  when: >
+    users is defined and
+    item.is_admin is defined and
+    item.is_admin == true
+
+
+- name: Set up password-less sudo for users
+  sudo: yes
+  sudo_user: root
+  copy:
+    content: '%{{ item.username }} ALL=(ALL) NOPASSWD:ALL'
+    dest: '/etc/sudoers.d/{{ item.username }}'
+    owner: 'root'
+    group: 'root'
+    mode: '0440'
+  with_items: users
+  when: >
+    users is defined and
+    item.passwordless_sudo is defined and
+    item.passwordless_sudo == true

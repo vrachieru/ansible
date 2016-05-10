@@ -1,0 +1,7 @@
+---
+
+user_groups: []
+users: []
+
+# Generate with mkpasswd --method=SHA-512
+default_password: ''
