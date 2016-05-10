@@ -1,0 +1,31 @@
+---
+
+- include: webupd8.yml
+
+- name: Accept Oracle License
+  sudo: yes
+  sudo_user: root
+  debconf:
+    name: 'oracle-java{{ item }}-installer'
+    question: 'shared/accepted-oracle-license-v1-1'
+    value: 'true'
+    vtype: 'select'
+  with_items: java_versions
+  when: java_versions
+
+- name: Install packages
+  sudo: yes
+  sudo_user: root
+  apt:
+    pkg: 'oracle-java{{ item }}-installer'
+    state: present
+    force: yes
+  with_items: java_versions
+
+- name: Set default version
+  sudo: yes
+  sudo_user: root
+  apt:
+    pkg: 'oracle-java{{ java_default_version }}-set-default'
+    state: present
+    force: yes

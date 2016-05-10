@@ -1,0 +1,17 @@
+---
+
+- name: Import WebUpd8 PGP key
+  sudo: yes
+  sudo_user: root
+  apt_key:
+    keyserver: 'keyserver.ubuntu.com'
+    id: '0xEEA14886'
+    state: 'present'
+
+- name: Install WebUpd8 Team Oracle Java PPA
+  sudo: yes
+  sudo_user: root
+  apt_repository:
+    repo: 'ppa:webupd8team/java'
+    state: 'present'
+    update_cache: 'yes'
