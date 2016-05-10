@@ -1,0 +1,62 @@
+---
+
+- name: Ensure Cloudera APT key is present
+  apt_key:
+    url: 'http://archive.cloudera.com/cdh5/ubuntu/lucid/amd64/cdh/archive.key'
+    state: 'present'
+  sudo: yes
+  sudo_user: root
+
+- name: Ensure Cloudera repository information is present
+  apt_repository:
+    repo: "deb [arch=amd64] http://archive.cloudera.com/cdh5/ubuntu/precise/amd64/cdh precise-cdh5 contrib"
+    state: 'present'
+  sudo: yes
+  sudo_user: root
+
+- name: Pin Cloudera repository
+  copy:
+    src: 'cloudera.pref'
+    dest: '/etc/apt/preferences.d/cloudera.pref'
+    force: 'yes'
+    backup: 'no'
+  sudo: yes
+  sudo_user: root
+
+- name: Ensure packages are installed
+  apt:
+    name: '{{ item }}'
+  with_items: zookeeper_packages
+  sudo: yes
+  sudo_user: root
+
+- name: Check if Zookeeper has been initialized
+  stat:
+    path: '{{ zookeeper_data_dir }}/myid'
+  register: zookeeper_id_file
+  sudo: yes
+  sudo_user: root
+
+- name: Stop Zookeeper
+  command: "service zookeeper-server stop"
+  when: not zookeeper_id_file.stat.exists
+  notify:
+    - Restart service
+  sudo: yes
+  sudo_user: root
+
+- name: Initialize Zookeeper
+  command: "service zookeeper-server init --force --myid={{ zookeeper_myid }}"
+  when: not zookeeper_id_file.stat.exists
+  notify:
+    - Restart service
+  sudo: yes
+  sudo_user: root
+
+- name: Ensure service is running
+  service:
+    name: 'zookeeper-server'
+    enabled: 'yes'
+    state: 'started'
+  sudo: yes
+  sudo_user: root

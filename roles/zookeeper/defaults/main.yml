@@ -1,0 +1,12 @@
+---
+
+zookeeper_packages:
+  - zookeeper-server
+
+zookeeper_repository_files:
+  - { source: 'cloudera.list', destination: '/etc/apt/sources.list.d/cloudera.list' }
+  - { source: 'cloudera.pref', destination: '/etc/apt/preferences.d/cloudera.pref' }
+
+zookeeper_conf_dir: '/etc/zookeeper/conf'
+zookeeper_data_dir: '/var/lib/zookeeper'
+zookeeper_myid: 0
